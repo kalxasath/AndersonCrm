@@ -2,6 +2,7 @@
 using AndersonCRMFunction;
 using System.Web.Mvc;
 using System.Linq;
+using System;
 
 namespace AndersonCRMWeb.Controllers
 {
@@ -46,9 +47,16 @@ namespace AndersonCRMWeb.Controllers
         }
 
         [HttpPost]
-        public JsonResult FilteredRead(EmployeeFilter employeeFilter)
+        public JsonResult ReadFiltered(EmployeeFilter employeeFilter)
         {
-            return Json(_iFEmployee.Read(employeeFilter));
+            try
+            {
+                return Json(_iFEmployee.Read(employeeFilter));
+            }
+            catch (Exception exception)
+            {
+                return Json(exception);
+            }
         }
         #endregion
 
@@ -62,8 +70,8 @@ namespace AndersonCRMWeb.Controllers
         [HttpPost]
         public ActionResult Update(Employee employee)
         {
-            _iFEmployeeTeam.Create(UserId, employee.EmployeeId, employee.EmployeeTeams.ToList());
-            _iFEmployeeDepartment.Create(UserId, employee.EmployeeId, employee.EmployeeDepartments.ToList());
+            _iFEmployeeTeam.Create(UserId, employee.EmployeeId, employee.EmployeeTeams);
+            _iFEmployeeDepartment.Create(UserId, employee.EmployeeId, employee.EmployeeDepartments);
             var createdEmployee = _iFEmployee.Update(UserId, employee);
             return RedirectToAction("Index");
         }
@@ -71,6 +79,7 @@ namespace AndersonCRMWeb.Controllers
 
         #region Delete
         [HttpDelete]
+
         public JsonResult Delete(int id)
         {
             _iFEmployee.Delete(id);

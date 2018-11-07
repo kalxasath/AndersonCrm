@@ -1,12 +1,16 @@
 ﻿using BaseModel;
 using System;
-using System.Collections.Generic;
 
 namespace AndersonCRMModel
 {
     public class EmployeeFilter : Base
     {
-        public String Name { get; set; }
+        public string Name { get; set; }
+        public bool isActive { get; set; }
         public bool isResigned { get; set; }
+        public DateTime? DateHiredFrom { get; set; }
+        public DateTime? DateHiredTo { get; set; }
+
+     
     }
 }

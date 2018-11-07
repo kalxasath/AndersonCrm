@@ -20,11 +20,15 @@ namespace AndersonCRMFunction
         #region CREATE
         public Employee Create(int createdBy, Employee employee)
         {           
-            EEmployee eEmployee = EEmployee(employee);
-            eEmployee.CreatedDate = DateTime.Now;
-            eEmployee.CreatedBy = createdBy;
-            eEmployee = _iDEmployee.Create(eEmployee);
-            return (Employee(eEmployee));
+            if(_iDEmployee.Count<EEmployee>(a => a.EmployeeNumber == employee.EmployeeNumber) == 0)
+            {
+                EEmployee eEmployee = EEmployee(employee);
+                eEmployee.CreatedDate = DateTime.Now;
+                eEmployee.CreatedBy = createdBy;
+                eEmployee = _iDEmployee.Create(eEmployee);
+                return (Employee(eEmployee));
+            }
+            return employee;
         }
         #endregion
 
@@ -79,14 +83,32 @@ namespace AndersonCRMFunction
             return Employees(eEmployees);
         }
 
+        //public List<Employee> Read(EmployeeFilter employeeFilter)
+        //{
+        //    Expression<Func<EEmployee, bool>> predicate =
+        //        a => ((a.FirstName.Contains(employeeFilter.Name) || a.MiddleName.Contains(employeeFilter.Name)) || a.LastName.Contains(employeeFilter.Name) || a.JobTitle.Name.Contains(employeeFilter.Name)
+        //        || employeeFilter.Name == null) && (employeeFilter.isResigned || !a.DateEnded.HasValue);
+
+        //    List<EEmployee> eEmployees = _iDEmployee.List(predicate);
+           
+        //    return Employees(eEmployees);
+        //}
         public List<Employee> Read(EmployeeFilter employeeFilter)
         {
-            Expression<Func<EEmployee, bool>> predicate =
-                a => ((a.FirstName.Contains(employeeFilter.Name) || a.MiddleName.Contains(employeeFilter.Name)) || a.LastName.Contains(employeeFilter.Name) || a.JobTitle.Name.Contains(employeeFilter.Name)
-                || employeeFilter.Name == null) && (employeeFilter.isResigned || !a.DateEnded.HasValue);
+            Expression<Func<EEmployee, bool>> predicate = null;
+
+                DateTime today = DateTime.Today;
+                predicate = a =>
+                    //ToDo: Logic on per month filter should be done here
+                    //(((a.DateHired >= employeeFilter.DateHiredFrom) && (a.DateHired < employeeFilter.DateHiredTo))
+                    //              || (!employeeFilter.DateHiredFrom.HasValue || !employeeFilter.DateHiredTo.HasValue)) &&
+                 ((a.FirstName.Contains(employeeFilter.Name) || a.MiddleName.Contains(employeeFilter.Name) || a.LastName.Contains
+                    (employeeFilter.Name) || a.JobTitle.Name.Contains(employeeFilter.Name))
+                    || (employeeFilter.Name == null))
+
+                 && (((!a.DateEnded.HasValue || a.DateEnded >= today) && employeeFilter.isActive ) || (a.DateEnded < today && employeeFilter.isResigned));
 
             List<EEmployee> eEmployees = _iDEmployee.List(predicate);
-           
             return Employees(eEmployees);
         }
 

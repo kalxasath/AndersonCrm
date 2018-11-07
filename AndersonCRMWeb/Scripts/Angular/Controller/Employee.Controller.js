@@ -9,11 +9,15 @@
 
     function EmployeeController($filter, $window, CompanyService, JobTitleService, EmployeeService) {
         var vm = this;
-
-
+        
         vm.EmployeeId;
+
         vm.Employee; 
-        vm.EmployeeFilter; 
+        vm.EmployeeFilter = {
+            IsActive: true,
+            IsResigned: false
+        }; 
+
         vm.Employees = [];
         vm.Companies = [];
         vm.JobTitles = [];
@@ -22,19 +26,36 @@
         vm.GoToUpdatePage = GoToUpdatePage;
         vm.Initialise = Initialise;
         vm.InitialiseDropdown = InitialiseDropdown;
+        vm.ReadFiltered = ReadFiltered;
         
-        vm.Delete = Delete;
+        vm.Delete = Delete; 
 
-        vm.SearchEmployee;
+        function GoToUpdatePage(employeeId) {
+            $window.location.href = '../Employee/Update/' + employeeId;
+        }
 
-        vm.Rfilter = Rfilter;
+        function Initialise() {
+            ReadFiltered();
+        }
 
-        function Rfilter() {
-            EmployeeService.FilteredRead(vm.EmployeeFilter)
+        function InitialiseDropdown(employeeId) {
+            vm.EmployeeId = employeeId;
+            Read();
+        }
+
+        function ReadFiltered() {
+            //ToDo: this should be done in the business logic
+            //var employeeFilter = angular.copy(vm.EmployeeFilter);
+            //if (employeeFilter.DateHiredFrom !== undefined) {
+            //    employeeFilter.DateHiredFrom = moment(employeeFilter.DateHiredFrom).format('YYYY-MM-DD');
+            //    employeeFilter.DateHiredTo = moment(employeeFilter.DateHiredFrom).add(1, 'months').format('YYYY-MM-DD');
+            //}
+            EmployeeService.ReadFiltered(vm.EmployeeFilter)
                 .then(function (response) {
                     vm.Employees = response.data;
-                        ReadCompanies();
-                        ReadJobTitles();
+                    ReadCompanies();
+                    ReadJobTitles();
+                    UpdateManager();
                 })
                 .catch(function (data, status) {
                     new PNotify({
@@ -46,32 +67,13 @@
                     });
 
                 });
-        } 
-
-        function GoToUpdatePage(employeeId) {
-            $window.location.href = '../Employee/Update/' + employeeId;
-        }
-
-        function Initialise() {
-            Read();
-        }
-
-        function InitialiseDropdown(employeeId) {
-            vm.EmployeeId = employeeId;
-            Read();
         }
 
         function Read() {
             EmployeeService.Read()
                 .then(function (response) {
                     vm.Employees = response.data;
-                    if (vm.EmployeeId) {
-                        UpdateEmployee();
-                    }
-                    else {
-                        ReadCompanies();
-                        ReadJobTitles();
-                    }
+                    UpdateEmployee();
                 })
                 .catch(function (data, status) {
                     new PNotify({
@@ -137,9 +139,15 @@
             });
         }
 
+        function UpdateManager() {
+            angular.forEach(vm.Employees, function (employee) {
+                employee.Manager = $filter('filter')(vm.Employees, { EmployeeId: employee.ManagerEmployeeId })[0];
+            });
+        }
+
         function Delete(employeeId) {
             var conf = window.confirm("Are you sure you want to delete?");
-            if (conf == true) {
+            if (conf === true) {
                 EmployeeService.Delete(employeeId)
                     .then(function (response) {
                         Read();
@@ -154,7 +162,6 @@
                         });
                     });
             }
-            else { return; false}
         }
 
     }
